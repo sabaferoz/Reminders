@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -46,9 +47,13 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun Section(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Card(modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+    Card(
+        modifier.fillMaxWidth().padding(vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             content()
         }
     }
@@ -187,13 +192,15 @@ fun TemplateEditor(
 
 @Composable
 fun StatusLabel(status: ReminderStatus) {
-    val color = when (status) {
-        ReminderStatus.READY -> MaterialTheme.colorScheme.primary
-        ReminderStatus.NEEDS_REVIEW -> MaterialTheme.colorScheme.error
-        ReminderStatus.SENT_CONFIRMED -> MaterialTheme.colorScheme.tertiary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    val tone = when (status) {
+        ReminderStatus.READY -> Tone.GOOD
+        ReminderStatus.WHATSAPP_OPENED -> Tone.INFO
+        ReminderStatus.NEEDS_REVIEW -> Tone.BAD
+        ReminderStatus.SENT_CONFIRMED -> Tone.GOOD
+        ReminderStatus.SCHEDULED -> Tone.NEUTRAL
+        ReminderStatus.SKIPPED -> Tone.WARN
     }
-    Text(status.label, color = color, style = MaterialTheme.typography.labelLarge)
+    Pill(status.label, tone)
 }
 
 fun fmtWhen(i: Instant, zoneId: String): String {
@@ -227,17 +234,16 @@ fun zoneShort(i: Instant, zoneId: String): String {
 }
 
 @Composable
-fun Pill(text: String, warn: Boolean = false) {
-    val bg = if (warn) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer
-    val fg = if (warn) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
-    Surface(color = bg, shape = RoundedCornerShape(50)) {
-        Text(text, color = fg, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+fun Pill(text: String, tone: Tone = Tone.NEUTRAL) {
+    val c = toneColors(tone)
+    Surface(color = c.bg, shape = RoundedCornerShape(50)) {
+        Text(text, color = c.fg, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp))
     }
 }
 
 @Composable
 fun SectionHeader(text: String) {
-    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp))
+    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp), color = MaterialTheme.colorScheme.primary)
 }
 
 /** Two clearly separated times: the patient's (what goes in the message) and yours. */
@@ -245,7 +251,7 @@ fun SectionHeader(text: String) {
 fun TimePair(start: Instant, patientZone: String?, managerZone: String) {
     if (patientZone != null) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(fmtTime(start, patientZone), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(fmtTime(start, patientZone), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Text("patient · ${zoneShort(start, patientZone)}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

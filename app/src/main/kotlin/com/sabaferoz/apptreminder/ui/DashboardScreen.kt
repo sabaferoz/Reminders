@@ -1,6 +1,12 @@
 package com.sabaferoz.apptreminder.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -48,15 +55,18 @@ fun DashboardScreen(vm: MainViewModel, onOpenReminders: () -> Unit) {
     val ready = reminders.count { it.state.status == ReminderStatus.READY }
     val review = reminders.count { it.state.status == ReminderStatus.NEEDS_REVIEW }
 
-    Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text("Today", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                Text(fmtDay(now, zone) + " · " + zone.substringAfterLast('/').replace('_', ' ') + " time", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(Modifier.fillMaxWidth()) {
+        Surface(color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(Modifier.weight(1f)) {
+                    Text("Today", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                    Text(fmtDay(now, zone) + " · " + zone.substringAfterLast('/').replace('_', ' ') + " time", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary)
+                }
+                IconButton({ vm.refresh() }, enabled = !busy) { Icon(Icons.Filled.Refresh, "Refresh calendar", tint = MaterialTheme.colorScheme.onPrimary) }
             }
-            IconButton({ vm.refresh() }, enabled = !busy) { Icon(Icons.Filled.Refresh, "Refresh calendar") }
         }
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.lastSyncStatus.isNotBlank()) {
             Text(settings.lastSyncStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -70,8 +80,8 @@ fun DashboardScreen(vm: MainViewModel, onOpenReminders: () -> Unit) {
 
         // Big, tappable summary
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-            SummaryCard("Ready to send", ready, highlight = ready > 0, modifier = Modifier.weight(1f), onClick = onOpenReminders)
-            SummaryCard("Need review", review + attention.size, highlight = review + attention.size > 0, warn = true, modifier = Modifier.weight(1f), onClick = onOpenReminders)
+            SummaryCard("Ready to send", ready, tone = if (ready > 0) Tone.GOOD else Tone.NEUTRAL, modifier = Modifier.weight(1f), onClick = onOpenReminders)
+            SummaryCard("Need review", review + attention.size, tone = if (review + attention.size > 0) Tone.WARN else Tone.NEUTRAL, modifier = Modifier.weight(1f), onClick = onOpenReminders)
         }
 
         SectionHeader("Today (${todays.size})")
@@ -80,7 +90,7 @@ fun DashboardScreen(vm: MainViewModel, onOpenReminders: () -> Unit) {
         SectionHeader("Next 8 days (${upcoming.size})")
         if (upcoming.isEmpty()) EmptyNote("Nothing coming up.")
         else upcoming.sortedBy { it.appt.start }.groupBy { fmtDay(it.appt.start, zone) }.forEach { (day, list) ->
-            Text(day, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
+            Text(day, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 8.dp))
             list.forEach { ApptCard(it, zone) }
         }
 
@@ -88,6 +98,7 @@ fun DashboardScreen(vm: MainViewModel, onOpenReminders: () -> Unit) {
             SectionHeader("Needs attention (${attention.size})")
             attention.sortedBy { it.appt.start }.forEach { ApptCard(it, zone) }
         }
+    }
     }
 }
 
@@ -97,49 +108,56 @@ private fun EmptyNote(text: String) =
 
 @Composable
 private fun Banner(title: String, body: String, warn: Boolean) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = if (warn) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    val c = toneColors(if (warn) Tone.BAD else Tone.INFO)
+    Card(colors = CardDefaults.cardColors(containerColor = c.bg), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Text(body, style = MaterialTheme.typography.bodyMedium)
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = c.fg)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = c.fg)
         }
     }
 }
 
 @Composable
-private fun SummaryCard(label: String, count: Int, highlight: Boolean, modifier: Modifier, onClick: () -> Unit, warn: Boolean = false) {
-    val container = when {
-        !highlight -> MaterialTheme.colorScheme.surfaceVariant
-        warn -> MaterialTheme.colorScheme.errorContainer
-        else -> MaterialTheme.colorScheme.primaryContainer
-    }
-    Card(colors = CardDefaults.cardColors(containerColor = container), modifier = modifier.clickable { onClick() }) {
+private fun SummaryCard(label: String, count: Int, tone: Tone, modifier: Modifier, onClick: () -> Unit) {
+    val c = toneColors(tone)
+    Card(colors = CardDefaults.cardColors(containerColor = c.bg), modifier = modifier.clickable { onClick() }) {
         Column(Modifier.padding(14.dp)) {
-            Text(count.toString(), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-            Text(label, style = MaterialTheme.typography.bodyMedium)
+            Text(count.toString(), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = c.fg)
+            Text(label, style = MaterialTheme.typography.titleSmall, color = c.fg)
         }
     }
 }
 
 @Composable
 fun ApptCard(r: ApptRow, managerZone: String) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                if (r.people.isEmpty()) "Unmatched attendee" else r.people.joinToString(" & ") { it.alias },
-                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
-                color = if (r.people.isEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-            )
-            if (r.people.isEmpty()) TimePair(r.appt.start, null, managerZone)
-            r.people.forEach { p -> TimePair(r.appt.start, p.timeZoneId, managerZone) }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                if (r.appt.cancelled) Pill("Cancelled", warn = true)
-                else if (r.appt.meetLink == null) Pill("No Meet link", warn = true) else Pill("Meet link ✓")
-                r.appt.changeNote?.let { Pill(it.substringBefore(" (")) }
+    val problem = r.appt.cancelled || r.people.isEmpty() || r.appt.meetLink == null
+    val accent = when {
+        problem -> toneColors(Tone.BAD).fg
+        r.reviewNote != null || r.appt.changeNote != null -> toneColors(Tone.WARN).fg
+        else -> MaterialTheme.colorScheme.primary
+    }
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Row(Modifier.height(IntrinsicSize.Min)) {
+            Box(Modifier.width(8.dp).fillMaxHeight().background(accent))
+            Column(Modifier.padding(14.dp).weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    if (r.people.isEmpty()) "Unmatched attendee" else r.people.joinToString(" & ") { it.alias },
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                    color = if (r.people.isEmpty()) toneColors(Tone.BAD).fg else MaterialTheme.colorScheme.onSurface,
+                )
+                if (r.people.isEmpty()) TimePair(r.appt.start, null, managerZone)
+                r.people.forEach { p -> TimePair(r.appt.start, p.timeZoneId, managerZone) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
+                    if (r.appt.cancelled) Pill("Cancelled", Tone.BAD)
+                    else if (r.appt.meetLink == null) Pill("No Meet link", Tone.BAD) else Pill("Meet link ✓", Tone.GOOD)
+                    r.appt.changeNote?.let { Pill(it.substringBefore(" ("), Tone.WARN) }
+                }
+                r.reviewNote?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = toneColors(Tone.WARN).fg) }
             }
-            r.reviewNote?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         }
     }
 }

@@ -17,7 +17,7 @@ fun HistoryScreen(vm: MainViewModel) {
     val rows by vm.reminderRows.collectAsState()
     val zone = vm.settings.collectAsState().value.reminder.scheduleZoneId
     LazyColumn(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        item { Text("History", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 16.dp)) }
+        item { Text("History", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 16.dp)) }
         item { Text("Kept for 30 days after the appointment, then removed automatically. The app records when WhatsApp was opened, not whether the message was sent.", style = MaterialTheme.typography.bodySmall) }
         items(rows.sortedByDescending { it.state.createdAt }, key = { "${it.state.key}" }) { r ->
             val s = r.state

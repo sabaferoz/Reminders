@@ -60,9 +60,7 @@ class MainActivity : ComponentActivity() {
         if (!BuildConfig.DEBUG) window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         route.value = intent?.getStringExtra(EXTRA_ROUTE)
         setContent {
-            MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
-                AppRoot(route)
-            }
+            AppTheme { AppRoot(route) }
         }
     }
 
@@ -127,7 +125,7 @@ private fun AppRoot(routeFlow: MutableStateFlow<String?>) {
 @Composable
 private fun BottomBar(nav: NavHostController) {
     val current = nav.currentBackStackEntryAsState().value?.destination?.route
-    NavigationBar {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         tabs.forEach { t ->
             NavigationBarItem(
                 selected = current == t.route || (t.route == "patients" && current?.startsWith("patient/") == true),

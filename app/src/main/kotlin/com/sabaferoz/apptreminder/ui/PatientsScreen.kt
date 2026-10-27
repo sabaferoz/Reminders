@@ -53,7 +53,7 @@ fun PatientsScreen(vm: MainViewModel, onEdit: (Long) -> Unit) {
     LazyColumn(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         item {
             Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Patients", style = MaterialTheme.typography.headlineSmall)
+                Text("Patients", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, style = MaterialTheme.typography.headlineMedium)
                 Button({ onEdit(-1) }) { Icon(Icons.Filled.Add, null); Text(" Add") }
             }
         }

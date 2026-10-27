@@ -46,12 +46,12 @@ fun RemindersScreen(vm: MainViewModel) {
     }
 
     LazyColumn(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text("Reminders", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 16.dp)) }
+        item { Text("Reminders", style = MaterialTheme.typography.headlineMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp)) }
         if (rows.none { it.state.status in order.map { o -> o.first } }) item { Text("No reminders yet. They appear once appointments match consenting patients.") }
         order.forEach { (status, title) ->
             val list = rows.filter { it.state.status == status }.sortedBy { it.state.dueAt }
             if (list.isNotEmpty()) {
-                item { Text("$title (${list.size})", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp)) }
+                item { SectionHeader("$title (${list.size})") }
                 items(list, key = { "${it.state.key}" }) { r -> ReminderCard(r, zone, vm, onOpen = { open(r) }, onEdit = { editing = r }) }
             }
         }
@@ -109,7 +109,7 @@ private fun ReminderCard(r: ReminderRow, managerZone: String, vm: MainViewModel,
         val appt = r.appt
         val pz = r.patient?.timeZoneId
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            Pill(s.key.kind.label)
+            Pill(s.key.kind.label, if (s.key.kind == com.sabaferoz.apptreminder.core.ReminderKind.A) Tone.INFO else Tone.GOOD)
             if (appt != null) Text(fmtDay(appt.start, pz ?: managerZone), style = MaterialTheme.typography.titleSmall)
         }
         if (appt != null) TimePair(appt.start, pz, managerZone)

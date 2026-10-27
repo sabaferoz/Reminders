@@ -71,7 +71,7 @@ fun SettingsScreen(vm: MainViewModel) {
     }
 
     Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Settings", style = MaterialTheme.typography.headlineSmall)
+        Text("Settings", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, style = MaterialTheme.typography.headlineMedium)
 
         Section("Google Calendar (read-only)") {
             Text(
