@@ -1,6 +1,8 @@
-// All Kotlin plugins are declared once here (version-pinned, not applied); modules apply them by id without a version.
-// AGP and KSP are versioned in :app only, so `REMINDERS_CORE_ONLY=1 ./gradlew :core:test` works without the Android SDK.
+// All plugins are declared once here (version-pinned, not applied); modules apply them by id without a version.
+// Gradle requires AGP and the Kotlin plugin to live in the same classloader, i.e. both declared in the root project.
 plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.ksp) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.serialization) apply false

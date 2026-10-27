@@ -45,7 +45,7 @@ Demo patients have **no phone number** so nothing can reach a stranger.
   and set Reminder B to **5 min (test)** → within a few minutes a notification appears (“1 reminder is ready to send.”).
 - **Reminders** → *Open WhatsApp* → WhatsApp opens with the text prefilled → press Send yourself → return and tap *Yes, I sent it*.
 - **Patients**: open “Demo Farid” (A = 18:00 Pakistan time on the previous day, B = 2 h) and “Demo Grace” (A off, B 30 min, custom text).
-- Run the logic tests without Android: `$env:REMINDERS_CORE_ONLY=1; .\gradlew.bat :core:test`
+- Run the logic tests: `.\gradlew.bat :core:test`
 
 ## 3. Connect your Google Calendar
 Follow [docs/OAUTH.md](docs/OAUTH.md) (≈10 minutes, no secrets go into the repo), then Settings → *Connect Google Calendar*.
