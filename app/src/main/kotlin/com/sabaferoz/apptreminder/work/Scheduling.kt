@@ -69,7 +69,7 @@ abstract class TickReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
-            try { Scheduling.tick(context.applicationContext, syncCalendar = false) } catch (_: Exception) { } finally { pending.finish() }
+            try { Scheduling.tick(context.applicationContext, syncCalendar = false) } catch (e: Exception) { } finally { pending.finish() }
         }
     }
 }

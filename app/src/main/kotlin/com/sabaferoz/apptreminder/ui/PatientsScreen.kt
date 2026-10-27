@@ -146,7 +146,7 @@ fun PatientEditScreen(vm: MainViewModel, id: Long, onDone: () -> Unit) {
 
         for (kind in ReminderKind.entries) {
             val ov = if (kind == ReminderKind.A) ovA else ovB
-            val setOv = { r: ReminderRule? -> if (kind == ReminderKind.A) ovA = r else ovB = r }
+            fun setOv(r: ReminderRule?) { if (kind == ReminderKind.A) ovA = r else ovB = r }
             val mode = when { ov == null -> OverrideMode.GLOBAL; !ov.enabled -> OverrideMode.DISABLED; else -> OverrideMode.CUSTOM }
             Section("${kind.label} for this patient") {
                 RadioGroup(
@@ -164,7 +164,7 @@ fun PatientEditScreen(vm: MainViewModel, id: Long, onDone: () -> Unit) {
 
         for (kind in ReminderKind.entries) {
             val t = if (kind == ReminderKind.A) tA else tB
-            val set = { v: String? -> if (kind == ReminderKind.A) tA = v else tB = v }
+            fun set(v: String?) { if (kind == ReminderKind.A) tA = v else tB = v }
             Section("${kind.label} message") {
                 if (t == null) {
                     Text("Using the global template.", style = MaterialTheme.typography.bodySmall)

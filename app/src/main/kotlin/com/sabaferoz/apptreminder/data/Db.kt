@@ -51,8 +51,8 @@ data class AppointmentEntity(
     tableName = "reminders",
     primaryKeys = ["appointmentId", "patientId", "kind"],
     foreignKeys = [
-        ForeignKey(PatientEntity::class, ["id"], ["patientId"], onDelete = ForeignKey.CASCADE),
-        ForeignKey(AppointmentEntity::class, ["id"], ["appointmentId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = PatientEntity::class, parentColumns = ["id"], childColumns = ["patientId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = AppointmentEntity::class, parentColumns = ["id"], childColumns = ["appointmentId"], onDelete = ForeignKey.CASCADE),
     ],
     indices = [Index("patientId"), Index("appointmentId")],
 )

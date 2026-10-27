@@ -41,7 +41,7 @@ fun RemindersScreen(vm: MainViewModel) {
         ReminderStatus.NEEDS_REVIEW to "Needs review",
         ReminderStatus.SCHEDULED to "Upcoming",
     )
-    val open = { r: ReminderRow ->
+    fun open(r: ReminderRow) {
         if (!settings.whatsAppNoticeAcknowledged) notice = r else vm.openWhatsApp(ctx, r.state.key)
     }
 
