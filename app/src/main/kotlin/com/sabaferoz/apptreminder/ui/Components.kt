@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +18,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -200,3 +203,54 @@ fun fmtWhen(i: Instant, zoneId: String): String {
 
 /** "Tue 3 Nov, 3:00 PM · Europe/Helsinki, UTC+02:00" */
 fun fmtWithZone(i: Instant, zoneId: String): String = "${fmtWhen(i, zoneId)} · ${MessageRenderer.zoneLabel(i, ZoneId.of(zoneId))}"
+
+// ---- readable time helpers & small building blocks --------------------------------------------------------------
+
+fun fmtTime(i: Instant, zoneId: String): String = MessageRenderer.formatTime(i, ZoneId.of(zoneId))
+
+/** "Tue 3 Nov" */
+fun fmtDay(i: Instant, zoneId: String): String {
+    val z = ZoneId.of(zoneId).let { i.atZone(it) }
+    val dow = z.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+    val mon = z.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+    return "$dow ${z.dayOfMonth} $mon"
+}
+
+/** "Helsinki (UTC+2)" – short and unambiguous, offset is the one in force on that date. */
+fun zoneShort(i: Instant, zoneId: String): String {
+    val secs = ZoneId.of(zoneId).rules.getOffset(i).totalSeconds
+    val a = kotlin.math.abs(secs)
+    val h = a / 3600
+    val m = (a % 3600) / 60
+    val off = "UTC" + (if (secs < 0) "-" else "+") + h + (if (m != 0) ":%02d".format(m) else "")
+    return zoneId.substringAfterLast('/').replace('_', ' ') + " ($off)"
+}
+
+@Composable
+fun Pill(text: String, warn: Boolean = false) {
+    val bg = if (warn) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer
+    val fg = if (warn) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
+    Surface(color = bg, shape = RoundedCornerShape(50)) {
+        Text(text, color = fg, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+    }
+}
+
+@Composable
+fun SectionHeader(text: String) {
+    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp))
+}
+
+/** Two clearly separated times: the patient's (what goes in the message) and yours. */
+@Composable
+fun TimePair(start: Instant, patientZone: String?, managerZone: String) {
+    if (patientZone != null) {
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(fmtTime(start, patientZone), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("patient · ${zoneShort(start, patientZone)}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    Text(
+        "You · ${fmtTime(start, managerZone)} ${zoneShort(start, managerZone)}",
+        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

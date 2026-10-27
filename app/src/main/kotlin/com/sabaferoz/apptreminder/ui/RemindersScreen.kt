@@ -108,13 +108,14 @@ private fun ReminderCard(r: ReminderRow, managerZone: String, vm: MainViewModel,
     Section(r.patient?.alias ?: "Unknown patient") {
         val appt = r.appt
         val pz = r.patient?.timeZoneId
-        if (appt != null && pz != null) {
-            Text("${s.key.kind.label} · ${fmtWithZone(appt.start, pz)}")
-            Text("Manager time: ${fmtWhen(appt.start, managerZone)}", style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Pill(s.key.kind.label)
+            if (appt != null) Text(fmtDay(appt.start, pz ?: managerZone), style = MaterialTheme.typography.titleSmall)
         }
-        s.dueAt?.let { Text("Ready at: ${fmtWhen(it, managerZone)} ($managerZone)", style = MaterialTheme.typography.bodySmall) }
+        if (appt != null) TimePair(appt.start, pz, managerZone)
+        s.dueAt?.let { Text("Ready at ${fmtDay(it, managerZone)}, ${fmtTime(it, managerZone)} (your time)", style = MaterialTheme.typography.bodySmall) }
         r.patient?.let { p ->
-            PhoneValidator.normalize(p.phone)?.let { Text("To: ${PhoneValidator.masked(it)}", style = MaterialTheme.typography.bodySmall) }
+            PhoneValidator.normalize(p.phone)?.let { Text("Sends to ${PhoneValidator.masked(it)}", style = MaterialTheme.typography.bodySmall) }
         }
         StatusLabel(s.status)
         s.reason?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
