@@ -174,7 +174,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     "Opening the app always refreshes everything.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            OutlinedButton({ ctx.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATIONS_SETTINGS)) }) { Text("Battery optimisation settings") }
+            OutlinedButton({ ctx.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }) { Text("Battery optimisation settings") }
         }
 
         Section("Privacy") {
