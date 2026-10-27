@@ -18,18 +18,15 @@ jobs:
       - name: Optional shared signing key (keeps the OAuth SHA-1 stable)
         env:
           KS_B64: ${{ secrets.REMINDERS_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.REMINDERS_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.REMINDERS_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.REMINDERS_KEY_PASSWORD }}
         run: |
           if [ -n "$KS_B64" ]; then
+            mkdir -p ~/.gradle
             echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/shared.jks"
-            {
-              echo "remindersKeystore=$RUNNER_TEMP/shared.jks"
-              echo "remindersKeystorePassword=${{ secrets.REMINDERS_KEYSTORE_PASSWORD }}"
-              echo "remindersKeyAlias=${{ secrets.REMINDERS_KEY_ALIAS }}"
-              echo "remindersKeyPassword=${{ secrets.REMINDERS_KEY_PASSWORD }}"
-            } >> ~/.gradle/gradle.properties 2>/dev/null || { mkdir -p ~/.gradle; cat >> ~/.gradle/gradle.properties <<PROPS
-          remindersKeystore=$RUNNER_TEMP/shared.jks
-          PROPS
-            }
+            printf 'remindersKeystore=%s\nremindersKeystorePassword=%s\nremindersKeyAlias=%s\nremindersKeyPassword=%s\n' \
+              "$RUNNER_TEMP/shared.jks" "$KS_PASS" "$KS_ALIAS" "$KEY_PASS" >> ~/.gradle/gradle.properties
           fi
       - name: Unit tests (core logic)
         run: ./gradlew :core:test --no-daemon
