@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Optional shared signing key (keeps the OAuth SHA-1 stable)
+        env:
+          KS_B64: ${{ secrets.REMINDERS_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/shared.jks"
+            {
+              echo "remindersKeystore=$RUNNER_TEMP/shared.jks"
+              echo "remindersKeystorePassword=${{ secrets.REMINDERS_KEYSTORE_PASSWORD }}"
+              echo "remindersKeyAlias=${{ secrets.REMINDERS_KEY_ALIAS }}"
+              echo "remindersKeyPassword=${{ secrets.REMINDERS_KEY_PASSWORD }}"
+            } >> ~/.gradle/gradle.properties 2>/dev/null || { mkdir -p ~/.gradle; cat >> ~/.gradle/gradle.properties <<PROPS
+          remindersKeystore=$RUNNER_TEMP/shared.jks
+          PROPS
+            }
+          fi
+      - name: Unit tests (core logic)
+        run: ./gradlew :core:test --no-daemon
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appointment-reminder-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
