@@ -69,7 +69,6 @@ fun PatientsScreen(vm: MainViewModel, onEdit: (Long) -> Unit) {
                 if (p.overrideAJson != null || p.overrideBJson != null || p.templateA != null || p.templateB != null) {
                     Text("Has custom reminder settings", style = MaterialTheme.typography.bodySmall)
                 }
-                if (p.isDemo) Text("Demo patient", style = MaterialTheme.typography.labelSmall)
             }
         }
     }

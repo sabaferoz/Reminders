@@ -16,7 +16,6 @@
   calendar/   GoogleAuth (Play services Authorization), CalendarApi (read-only GETs), CalendarSync
   work/       Scheduling (AlarmManager + WorkManager + receivers), Notifier
   whatsapp/   WhatsAppHandoff : MessageDelivery (wa.me deep link restricted to com.whatsapp / com.whatsapp.w4b)
-  demo/       fictional seed data
   ui/         MainViewModel (single VM) + Compose screens
 ```
 Spring analogy: `:core` = the service layer (no framework), `Repository` = the DAO, `MainViewModel` = a request-scoped controller,
@@ -24,8 +23,8 @@ Spring analogy: `:core` = the service layer (no framework), `Repository` = the D
 
 ## Core flow
 `sync` (Calendar → local appointments) → `Repository.reconcile` → `ReminderReconciler` (pure) → rows: SCHEDULED → READY at due time →
-notification → *Open WhatsApp* (re-sync, rebuild message from fresh data, hand off) → WHATSAPP_OPENED → *Confirm sent* → SENT_CONFIRMED.
-“Ready time” (`readyAt`) and the manager's confirmation (`confirmedAt`) are stored separately; opening WhatsApp is never treated as delivery.
+notification → *Open WhatsApp* (re-sync, rebuild message from fresh data, hand off) → WHATSAPP_OPENED (the app does not ask whether you pressed Send).
+The app records when a reminder became ready (`readyAt`) and when WhatsApp was opened (`openedAt`); it never claims delivery.
 
 Rules worth remembering: fixed-time A = previous calendar day *in the chosen zone*, B = same day; quiet hours use the patient's zone;
 a reminder inside quiet hours moves to the window's end only if that is still before the appointment, otherwise it is SKIPPED with a reason;
@@ -48,7 +47,6 @@ Boot, clock-change, time-zone-change and app-update broadcasts re-arm it. Aggres
 - Retention: appointments and their reminders are deleted 30 days after they end; deleting a patient cascades to their reminders; “Delete all local data” wipes the DB.
 - Ambiguity fails safe: duplicate patient emails, missing/invalid phone, missing/non-Meet link, no consent, or a cancelled/started appointment block sending.
 - WhatsApp: the message and Meet link go to the recipient (and through WhatsApp/Meta). The app shows this notice before the first send.
-- Use fictional data in development; the demo numbers are blank by design.
 
 ## Version 2 seam
 Implement `MessageDelivery` with the WhatsApp Business Platform API (template messages, delivery webhooks need a server – a deliberate V2 decision) and swap it in `MainViewModel.openWhatsApp`. Message building (`OutgoingMessageBuilder`) and reminder state are already delivery-agnostic.

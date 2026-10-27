@@ -24,7 +24,7 @@ git checkout claude/vibrant-carson-u5l9fy
 Open the folder in Android Studio → let Gradle sync (it offers to install the Android SDK 35 platform; accept).
 Android Studio creates `local.properties` (git-ignored) with your SDK path. No other tools are needed: use the bundled JDK and the Gradle wrapper.
 
-## 2. Run the demo (no Google account needed)
+## 2. Install on your phone
 1. Phone: Settings → About phone → tap **Build number** 7× → Settings → System → **Developer options** → enable **USB debugging**.
 2. Plug in via USB, accept the “Allow USB debugging” prompt. Check: `& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices`
 3. Android Studio → select your phone → ▶ Run. Or from PowerShell:
@@ -33,19 +33,11 @@ $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 .\gradlew.bat :app:assembleDebug
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r app\build\outputs\apk\debug\app-debug.apk
 ```
-The APK can also be copied to the phone and opened (allow “install unknown apps” for your file manager).
+If Gradle says “SDK location not found”, open the folder once in Android Studio (it writes `local.properties`).
 
-The app starts in **Demo mode** with fictional patients (Finland, Pakistan, UK, New York, Los Angeles) and appointments, including
-daylight-saving edge cases, a missing Meet link, an unmatched attendee, a cancellation and a two-patient event.
-Demo patients have **no phone number** so nothing can reach a stranger.
-
-### Test checklist
-- **Dashboard**: each appointment shows patient-local time and Pakistan time side by side.
-- **Settings → Demo**: enter *your own* number → *Apply to demo patients*. Choose a demo patient, add a test appointment 10 min ahead,
-  and set Reminder B to **5 min (test)** → within a few minutes a notification appears (“1 reminder is ready to send.”).
-- **Reminders** → *Open WhatsApp* → WhatsApp opens with the text prefilled → press Send yourself → return and tap *Yes, I sent it*.
-- **Patients**: open “Demo Farid” (A = 18:00 Pakistan time on the previous day, B = 2 h) and “Demo Grace” (A off, B 30 min, custom text).
-- Run the logic tests: `.\gradlew.bat :core:test`
+There is no demo data: the app starts empty. Add patients (with consent), connect Google Calendar (below), and reminders appear for matching appointments.
+Reminder A/B offsets accept any number of minutes (e.g. 5) if you want to check timing quickly.
+Run the logic tests: `.\gradlew.bat :core:test`
 
 ## 3. Connect your Google Calendar
 Follow [docs/OAUTH.md](docs/OAUTH.md) (≈10 minutes, no secrets go into the repo), then Settings → *Connect Google Calendar*.

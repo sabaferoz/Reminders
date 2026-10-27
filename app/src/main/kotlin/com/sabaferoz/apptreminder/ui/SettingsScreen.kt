@@ -54,7 +54,6 @@ fun SettingsScreen(vm: MainViewModel) {
     var pickCalendar by remember { mutableStateOf(false) }
     var confirmWipe by remember { mutableStateOf(false) }
     var confirmDisconnect by remember { mutableStateOf(false) }
-    var confirmGoogle by remember { mutableStateOf(false) }
     var pickZone by remember { mutableStateOf(false) }
     val zones = remember { vm.zones.allIanaZones() }
 
@@ -74,28 +73,6 @@ fun SettingsScreen(vm: MainViewModel) {
     Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Settings", style = MaterialTheme.typography.headlineSmall)
 
-        Section("Data source") {
-            LabeledSwitch("Demo mode (fictional data, no Google)", s.demoMode) { on -> if (!on) vm.setDemoMode(false) else vm.setDemoMode(true) }
-            if (s.demoMode) {
-                var number by remember { mutableStateOf("") }
-                Text("Demo patients have no phone number so nothing can be sent to a stranger. To test the WhatsApp hand-off, enter ONLY your own number:", style = MaterialTheme.typography.bodySmall)
-                OutlinedTextField(number, { number = it }, label = { Text("My test number (+country code)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button({ vm.setDemoPhone(number) }) { Text("Apply to demo patients") }
-                    OutlinedButton({ vm.regenerateDemo() }) { Text("Regenerate demo data") }
-                }
-                val demoPatients = patients.filter { it.isDemo }
-                var minutes by remember { mutableStateOf("10") }
-                var who by remember { mutableStateOf<String?>(null) }
-                var pickWho by remember { mutableStateOf(false) }
-                OutlinedButton({ pickWho = true }, Modifier.fillMaxWidth()) { Text(demoPatients.firstOrNull { it.email == who }?.alias ?: "Test appointment for… (choose demo patient)") }
-                NumberField("Test appointment starts in (minutes)", minutes.toLongOrNull() ?: 10, { minutes = it.toString() }, Modifier.fillMaxWidth())
-                Button({ who?.let { vm.addTestAppointment(it, minutes.toLongOrNull() ?: 10) } }, enabled = who != null) { Text("Add test appointment") }
-                Text("Tip: set Reminder B to “5 min (test)” below, then add a test appointment 10 minutes ahead.", style = MaterialTheme.typography.bodySmall)
-                if (pickWho) PickerDialog("Demo patient", demoPatients, { it.alias }, { who = it.email; pickWho = false }, { pickWho = false })
-            }
-        }
-
         Section("Google Calendar (read-only)") {
             Text(
                 if (s.googleConnected) "Connected. Calendar: ${s.calendarName ?: "primary"}" else "Not connected.",
@@ -107,7 +84,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     "The app never creates, edits or deletes events.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            if (!s.googleConnected) Button({ if (s.demoMode) confirmGoogle = true else connect() }) { Text("Connect Google Calendar") }
+            if (!s.googleConnected) Button({ connect() }) { Text("Connect Google Calendar") }
             else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton({ pickCalendar = true }) { Text("Select calendar") }
@@ -186,13 +163,6 @@ fun SettingsScreen(vm: MainViewModel) {
     if (pickCalendar) PickerDialog("Appointment calendar", calendars, { it.summary ?: it.id }, { c: CalendarListEntry -> vm.selectCalendar(c); pickCalendar = false }, { pickCalendar = false })
     if (pickZone) PickerDialog("Scheduling time zone", zones, { it }, { z: String -> vm.updateSettings { it.copy(reminder = it.reminder.copy(scheduleZoneId = z)) }; pickZone = false }, { pickZone = false })
 
-    if (confirmGoogle) AlertDialog(
-        onDismissRequest = { confirmGoogle = false },
-        title = { Text("Leave demo mode?") },
-        text = { Text("Fictional demo patients and appointments will be removed. Real patients you added stay.") },
-        confirmButton = { TextButton({ confirmGoogle = false; connect() }) { Text("Continue") } },
-        dismissButton = { TextButton({ confirmGoogle = false }) { Text("Cancel") } },
-    )
     if (confirmDisconnect) AlertDialog(
         onDismissRequest = { confirmDisconnect = false },
         title = { Text("Disconnect Google?") },

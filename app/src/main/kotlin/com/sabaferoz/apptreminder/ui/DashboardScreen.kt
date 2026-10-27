@@ -52,12 +52,17 @@ fun DashboardScreen(vm: MainViewModel, onOpenReminders: () -> Unit) {
         }
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         Text(
-            (if (settings.demoMode) "DEMO MODE – fictional data. " else "") + settings.lastSyncStatus,
+            settings.lastSyncStatus,
             style = MaterialTheme.typography.bodySmall,
         )
         if (!Notifier.canNotify(ctx)) {
             Section("Notifications are off") {
                 Text("You will not be alerted when reminders are ready. Open Settings → Notifications.")
+            }
+        }
+        if (!settings.googleConnected) {
+            Section("Connect your calendar") {
+                Text("Open Settings → Connect Google Calendar to load appointments.")
             }
         }
         Section("Reminders") {

@@ -78,7 +78,6 @@ data class ReminderSettings(
 data class AppSettings(
     val reminder: ReminderSettings = ReminderSettings(),
     val whatsApp: WhatsAppApp = WhatsAppApp.REGULAR,
-    val demoMode: Boolean = true,
     val googleConnected: Boolean = false,
     val calendarId: String? = null,
     val calendarName: String? = null,

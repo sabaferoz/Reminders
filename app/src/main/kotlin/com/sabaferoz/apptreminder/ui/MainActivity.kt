@@ -107,19 +107,6 @@ private fun AppRoot(routeFlow: MutableStateFlow<String?>) {
     val msg by vm.message.collectAsState()
     LaunchedEffect(msg) { msg?.let { snackbar.showSnackbar(it); vm.toast(null) } }
 
-    val pending by vm.pendingConfirm.collectAsState()
-    pending?.let { key ->
-        AlertDialog(
-            onDismissRequest = { vm.pendingConfirm.value = null },
-            title = { Text("Did you send the message?") },
-            text = { Text("WhatsApp was opened with the reminder. Opening it does not mean it was sent. Confirm only if you pressed Send.") },
-            confirmButton = { TextButton({ vm.confirmSent(key) }) { Text("Yes, I sent it") } },
-            dismissButton = {
-                TextButton({ vm.notSent(key) }) { Text("No, not sent") }
-            },
-        )
-    }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { BottomBar(nav) },

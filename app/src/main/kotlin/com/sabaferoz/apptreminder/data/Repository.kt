@@ -88,14 +88,8 @@ class Repository(val db: AppDatabase, private val settingsRepo: SettingsRepo) {
     suspend fun markOpened(key: ReminderKey, now: Instant = Instant.now()) =
         mutate(key) { it.copy(status = ReminderStatus.WHATSAPP_OPENED.name, locked = true, openedAtMs = now.toEpochMilli()) }
 
-    suspend fun confirmSent(key: ReminderKey, now: Instant = Instant.now()) =
-        mutate(key) { it.copy(status = ReminderStatus.SENT_CONFIRMED.name, locked = true, confirmedAtMs = now.toEpochMilli()) }
-
     suspend fun skip(key: ReminderKey, now: Instant = Instant.now()) =
         mutate(key) { it.copy(status = ReminderStatus.SKIPPED.name, locked = true, reason = "Skipped by user", skippedAtMs = now.toEpochMilli()) }
-
-    /** "I did not send it": let automation take over again. */
-    suspend fun notSent(key: ReminderKey) = mutate(key) { it.copy(locked = false, status = ReminderStatus.READY.name, notifiedAtMs = null) }
 
     suspend fun saveDraft(key: ReminderKey, text: String?) = mutate(key) { it.copy(draft = text?.takeIf { t -> t.isNotBlank() }) }
 
@@ -113,7 +107,6 @@ class Repository(val db: AppDatabase, private val settingsRepo: SettingsRepo) {
 
     suspend fun deleteDemoData() = db.withTransaction { appointments.deleteDemo(); patients.deleteDemo() }
     suspend fun deleteRealAppointments() = appointments.deleteReal()
-    suspend fun setDemoPhone(phone: String) = patients.setDemoPhone(phone)
 
     suspend fun wipeEverything() = db.withTransaction {
         appointments.deleteAll(); patients.deleteAll(); db.kv().deleteAll()

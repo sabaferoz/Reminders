@@ -26,7 +26,7 @@ selecting one calendar only limits what this app **requests**. The app also neve
 ```
    (or `.\gradlew.bat :app:signingReport`)
 7. **Clients → Create client** → type **Android** → package name above → paste the SHA-1 → Create. (Nothing to copy into the code.)
-8. Run the app → Settings → turn off Demo mode / *Connect Google Calendar* → pick your account → accept the “unverified app” notice (you are a listed test user) → *Select calendar*.
+8. Run the app → Settings → *Connect Google Calendar* → pick your account → accept the “unverified app” notice (you are a listed test user) → *Select calendar*.
 
 Troubleshooting: *“Error 10 / DEVELOPER_ERROR / 403”* = package name or SHA-1 mismatch, Calendar API not enabled, or the account is not a test user.
 

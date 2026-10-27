@@ -37,7 +37,7 @@ fun RemindersScreen(vm: MainViewModel) {
 
     val order = listOf(
         ReminderStatus.READY to "Ready to send",
-        ReminderStatus.WHATSAPP_OPENED to "WhatsApp opened – confirm whether you sent it",
+        ReminderStatus.WHATSAPP_OPENED to "WhatsApp opened",
         ReminderStatus.NEEDS_REVIEW to "Needs review",
         ReminderStatus.SCHEDULED to "Upcoming",
     )
@@ -132,14 +132,7 @@ private fun ReminderCard(r: ReminderRow, managerZone: String, vm: MainViewModel,
             ReminderStatus.SCHEDULED, ReminderStatus.NEEDS_REVIEW -> OutlinedButton(onEdit) { Text("Edit draft") }
             else -> Unit
         }
-        if (s.status == ReminderStatus.WHATSAPP_OPENED) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button({ vm.confirmSent(s.key) }) { Text("Confirm sent") }
-                OutlinedButton({ vm.notSent(s.key) }) { Text("Not sent") }
-            }
-        }
         if (s.status == ReminderStatus.READY || s.status == ReminderStatus.NEEDS_REVIEW || s.status == ReminderStatus.SCHEDULED) {
-            if (s.status == ReminderStatus.READY) Button({ vm.confirmSent(s.key) }) { Text("Confirm sent") }
             TextButton({ vm.skip(s.key) }) { Text("Skip") }
         }
     }

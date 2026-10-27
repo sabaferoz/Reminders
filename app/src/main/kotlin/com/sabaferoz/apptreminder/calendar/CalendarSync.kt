@@ -5,7 +5,6 @@ import com.sabaferoz.apptreminder.data.Repository
 import com.sabaferoz.apptreminder.data.SettingsRepo
 import com.sabaferoz.apptreminder.data.toCore
 import com.sabaferoz.apptreminder.data.toEntity
-import com.sabaferoz.apptreminder.demo.DemoData
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
@@ -24,7 +23,6 @@ class CalendarSync(
     suspend fun sync(now: Instant = Instant.now()): String = mutex.withLock {
         val s = settingsRepo.get()
         val status = when {
-            s.demoMode -> { DemoData.seed(repo, now); "Demo mode: using fictional data." }
             !s.googleConnected -> "Google Calendar is not connected."
             else -> fetchGoogle(now, s.calendarId ?: "primary")
         }

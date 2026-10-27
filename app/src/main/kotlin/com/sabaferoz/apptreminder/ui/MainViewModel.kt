@@ -25,7 +25,6 @@ import com.sabaferoz.apptreminder.data.AppointmentEntity
 import com.sabaferoz.apptreminder.data.PatientEntity
 import com.sabaferoz.apptreminder.data.ReminderEntity
 import com.sabaferoz.apptreminder.data.toCore
-import com.sabaferoz.apptreminder.demo.DemoData
 import com.sabaferoz.apptreminder.whatsapp.WhatsAppHandoff
 import com.sabaferoz.apptreminder.work.Notifier
 import com.sabaferoz.apptreminder.work.Scheduling
@@ -64,7 +63,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val busy = MutableStateFlow(false)
     val message = MutableStateFlow<String?>(null)
-    val pendingConfirm = MutableStateFlow<ReminderKey?>(null)
     val calendars = MutableStateFlow<List<CalendarListEntry>>(emptyList())
 
     val apptRows: StateFlow<List<ApptRow>> = combine(appointments, patients, settings) { a, p, s ->
@@ -91,7 +89,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    init { refresh() }
+    init {
+        viewModelScope.launch { g.repo.deleteDemoData() } // clear any leftovers from earlier demo builds
+        refresh()
+    }
 
     fun toast(msg: String?) { message.value = msg }
 
@@ -115,34 +116,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { g.settings.update(f); Scheduling.tick(getApplication(), syncCalendar = false) }
     }
 
-    fun setDemoMode(on: Boolean) {
-        viewModelScope.launch {
-            if (on) g.settings.update { it.copy(demoMode = true) } else {
-                g.repo.deleteDemoData()
-                g.settings.update { it.copy(demoMode = false) }
-            }
-            refresh()
-        }
-    }
-
-    fun regenerateDemo() {
-        viewModelScope.launch { g.repo.deleteDemoData(); refresh() }
-    }
-
-    fun setDemoPhone(raw: String) {
-        viewModelScope.launch {
-            val e164 = PhoneValidator.normalize(raw)
-            if (raw.isNotBlank() && e164 == null) { message.value = PhoneValidator.error(raw); return@launch }
-            g.repo.setDemoPhone(e164 ?: "")
-            message.value = if (e164 == null) "Demo phone numbers cleared." else "All demo patients now use this number. Use only your own number."
-            recompute()
-        }
-    }
-
-    fun addTestAppointment(patientEmail: String, minutes: Long) {
-        viewModelScope.launch { DemoData.addTestAppointment(g.repo, patientEmail, minutes); recompute(); message.value = "Test appointment added in $minutes min." }
-    }
-
     // ---- Google ---------------------------------------------------------------------------------------------------
     suspend fun beginAuth(): AuthOutcome = g.auth.authorize()
 
@@ -156,8 +129,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun finishConnect(token: String) {
         viewModelScope.launch {
-            g.repo.deleteDemoData()
-            g.settings.update { it.copy(googleConnected = true, demoMode = false) }
+            g.settings.update { it.copy(googleConnected = true) }
             loadCalendars(token)
             refresh()
         }
@@ -243,8 +215,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // ---- reminders ------------------------------------------------------------------------------------------------
     fun saveDraft(key: ReminderKey, text: String?) { viewModelScope.launch { g.repo.saveDraft(key, text) } }
     fun skip(key: ReminderKey) { viewModelScope.launch { g.repo.skip(key); recompute() } }
-    fun confirmSent(key: ReminderKey) { viewModelScope.launch { g.repo.confirmSent(key); pendingConfirm.value = null; recompute() } }
-    fun notSent(key: ReminderKey) { viewModelScope.launch { g.repo.notSent(key); pendingConfirm.value = null; recompute() } }
 
     fun openWhatsApp(ctx: Context, key: ReminderKey) {
         viewModelScope.launch {
@@ -255,7 +225,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 when (val r = g.repo.buildMessage(key)) {
                     is BuildResult.Blocked -> { message.value = "Not sent: ${r.reason}"; recompute() }
                     is BuildResult.Ok -> when (val d = WhatsAppHandoff(ctx, settings.value.whatsApp).deliver(r.message)) {
-                        DeliveryResult.HandedOff -> { g.repo.markOpened(key); pendingConfirm.value = key }
+                        DeliveryResult.HandedOff -> g.repo.markOpened(key)
                         DeliveryResult.AppNotInstalled -> message.value = "${settings.value.whatsApp.label} is not installed. Choose the other app in Settings."
                         is DeliveryResult.Failed -> message.value = d.reason
                     }
